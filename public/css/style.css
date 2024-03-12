@@ -1,3 +1,12 @@
+body{
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    flex: 1;
+}
 /* Navbar */
 
 .navbar {
@@ -43,4 +52,73 @@
     flex-wrap: wrap;
     justify-content: center;
     align-items: space-evenly;
+}
+
+/* cards  */
+
+.container-card {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    
+}
+
+.card {
+    border: none !important;
+    padding: 10px;
+    margin-bottom: 2rem;
+}
+
+.card-img-top {
+    border-radius: 1rem !important;
+    width: 100% !important;
+    object-fit: cover;
+
+}
+
+.card-body{
+    padding: 0 !important;
+}
+
+.card-text{
+    font-weight: 400 !important;
+}
+
+.listing-link{
+    text-decoration: none;
+}
+
+/* Card Effect  */
+
+.card-img-overlay {
+    opacity: 0;
+}
+
+.card-img-overlay:hover{
+    opacity: 0.2;
+    background-color: white;
+}
+
+/* New listing  */
+
+.add-btn{
+    background-color: #fe424d !important;
+    border: none !important;
+
+}
+
+/* Show page */
+
+.show-img {
+    height: 30vh;
+
+}
+
+.btns {
+    display: flex;
+}
+
+.show-card {
+    padding-left: 0;
+    padding-right: 0;
 }
