@@ -3,14 +3,16 @@
     <div class="row mt-3">
         <div class="col-8 offset-2">
     <h3>Create New Listing</h3>
-    <form method="POST" action="/listings">
+    <form method="POST" action="/listings" novalidate class="needs-validation">
         <div class="mb-3">
             <label for="title" class="form-lable">Title</label>
-            <input placeholder="Enter title" name="listing[title]" type="text" class="form-control">   <!-- pass object Listing[title] -->
+            <input placeholder="Enter title" name="listing[title]" type="text" class="form-control" required >   <!-- pass object Listing[title] -->
+            <div class="invalid-feedback"> Please Enter Title </div>
         </div>
         <div class="mb-3">
             <label for="description" class="form-lable">Description</label>
-            <textarea placeholder="Enter description" name="listing[description]" class="form-control"></textarea>
+            <textarea placeholder="Enter description" name="listing[description]" class="form-control" required></textarea>
+            <div class="invalid-feedback"> Please Enter Short Description </div>
         </div>
         <div class="mb-3">
             <label for="image" class="form-lable">Image Link</label>
@@ -19,17 +21,20 @@
         <div class="row">
             <div class="mb-3 col-md-4">
                 <label for="price" class="form-lable">Price</label>
-                <input placeholder="Enter price" name="listing[price]" type="number" class="form-control">
+                <input placeholder="Enter price" name="listing[price]"  class="form-control" required>
+                <div class="invalid-feedback"> Should be Enter Number </div>
             </div>
             <div class="mb-3 col-md-8">
                 <label for="location" class="form-lable">Location</label>
-                <input placeholder="Enter Location" name="listing[location]" type="text" class="form-control">
+                <input placeholder="Enter Location" name="listing[location]" type="text" class="form-control" required>
+                <div class="invalid-feedback"> Should be Enter Location </div>
             </div>
         </div>
         
         <div class="mb-3">
             <label for="country" class="form-lable">Country</label>
-            <input placeholder="Enter country" name="listing[country]" type="text" class="form-control">
+            <input placeholder="Enter country" name="listing[country]" type="text" class="form-control" required>
+            <div class="invalid-feedback"> Should be Enter Country </div>
         </div>
         
         <button class="btn btn-dark add-btn mt-3">ADD</button>
