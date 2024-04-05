@@ -7,7 +7,8 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const warpAsync = require("./utils/warpAsync");
 const ExpressError = require("./utils/ExpressError");
-const {listingSchema} = require("./schema.js")
+const {listingSchema, reviewSchema} = require("./schema.js");
+const Review = require("./models/review.js");
 
 
 app.set("view engine" ,"ejs");
@@ -29,6 +30,8 @@ main()
 async function main(){
     await mongoose.connect(MONGO_URL);
 }
+
+
 app.get("/" , (req,res) => {
     res.send("Hi! I am root...");
 });
@@ -43,7 +46,18 @@ const validateListing = (req,res,next) => {
     } else {
         next();
     }
-}
+};
+
+const validateReview = (req,res,next) => {
+    let {error} = reviewSchema.validate(req.body);
+    console.log(error);
+    if(error){
+        let errMsg = error.details.map((el) => el.message).join(",");
+        throw new ExpressError(400, errMsg);
+    } else {
+        next();
+    }
+};
 
 //Index Routes
 app.get("/listing", warpAsync(async (req,res) =>{
@@ -58,9 +72,9 @@ app.get("/listing/new" , (req,res) => {
 });
 
 //Show Routes
-app.get("/listing/:id", validateListing, warpAsync(async (req,res) =>{
+app.get("/listing/:id", warpAsync(async (req,res) =>{
     let {id} = req.params;
-    const listingShow = await Listing.findById(id);
+    const listingShow = await Listing.findById(id).populate("reviews");
     res.render("listing/show.ejs",{listingShow});
     console.log(listingShow);
 }));
@@ -68,10 +82,10 @@ app.get("/listing/:id", validateListing, warpAsync(async (req,res) =>{
 
 
 // create Routes 
-app.post("/listings", validateListing, warpAsync(async (req,res,next) => {
+app.post("/listing", validateListing, warpAsync(async (req,res,next) => {
     // let {result} = listingSchema.validate(req.body);
     //     console.log(e);
-    //     let ListingObj = req.body.listing;  // dricet pass object 
+        let ListingObj = req.body.listing;  // dricet pass object 
         const newListing = new Listing(ListingObj);
         // console.log(newListing);
         await newListing.save();
@@ -105,7 +119,28 @@ app.delete("/listing/:id", warpAsync(async (req,res) =>{
     res.redirect("/listing");
 }));
 
+// Reviews
+// Post Review Route
+app.post("/listing/:id/review", validateReview, warpAsync(async (req,res) => {
+    let listing = await Listing.findById(req.params.id);
+    let newReview = new Review(req.body.review);
 
+    listing.reviews.push(newReview);
+
+    await newReview.save();
+    await listing.save();
+    
+    res.redirect(`/listing/${listing._id}`);
+}));
+
+//Delete Review Route
+app.delete("/listing/:id/review/:reviewId", warpAsync(async (req,res) =>{
+    let {id ,reviewId} = req.params;
+    await Listing.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});
+    await Review.findByIdAndDelete(reviewId);
+
+    res.redirect(`/listing/${id}`);
+}));
 
 // invalid Routes error
 app.all("*" , (req,res,next) =>{
