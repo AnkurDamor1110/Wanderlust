@@ -26,7 +26,7 @@ router.post("/signup", warpAsync( async (req,res) => {
 router.get("/login" , (req,res) =>{
     res.render("users/login.ejs");
 });
-au
+
 router.post("/login" ,
     passport.authenticate("local", {failureRedirect: "/login", failureFlash: true}) ,
     async (req,res) => {
