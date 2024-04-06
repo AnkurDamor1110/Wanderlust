@@ -37,7 +37,7 @@ const listingSchema = new Schema({
 
 // When Delete listing after their review delete
 listingSchema.post("findOneAndDelete" , async (listing) =>{
-    if(listing){
+    if(listing && listing.reviews.length){
         await Review.findByIdAndDelete( {_id: {$in: listing.reviews}});
     }
 });

@@ -27,16 +27,17 @@ router.post("/", validateReview, warpAsync(async (req,res) => {
 
     await newReview.save();
     await listing.save();
-    
+    req.flash("success" , "New Review Created!");
     res.redirect(`/listing/${listing._id}`);
 }));
 
 //Delete Review Route
 router.delete("/:reviewId", warpAsync(async (req,res) =>{
     let {id ,reviewId} = req.params;
+
     await Listing.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});
     await Review.findByIdAndDelete(reviewId);
-
+    req.flash("success" , "Review Deleted!");
     res.redirect(`/listing/${id}`);
 }));
 

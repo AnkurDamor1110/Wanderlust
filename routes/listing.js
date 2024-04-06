@@ -34,8 +34,12 @@ router.get("/new" , (req,res) => {
 router.get("/:id", warpAsync(async (req,res) =>{
     let {id} = req.params;
     const listingShow = await Listing.findById(id).populate("reviews");
+    if(!listingShow){
+        req.flash("error" , "Listing you requested does not exit!");
+        res.redirect("/listing");
+    }
     res.render("listing/show.ejs",{listingShow});
-    console.log(listingShow);
+    // console.log(listingShow);
 }));
 
 
@@ -48,7 +52,7 @@ router.post("/", validateListing, warpAsync(async (req,res,next) => {
         const newListing = new Listing(ListingObj);
         // console.log(newListing);
         await newListing.save();
-    
+        req.flash("success" , "New Listing Created!");
         res.redirect("/listing");
 }));
 
@@ -58,6 +62,10 @@ router.post("/", validateListing, warpAsync(async (req,res,next) => {
 router.get("/:id/edit", warpAsync(async (req,res) =>{
     let {id} = req.params;
     const listingShow = await Listing.findById(id);
+    if(!listingShow){
+        req.flash("error" , "Listing you requested does not exit!");
+        res.redirect("/listing");
+    }
     res.render("listing/editListing.ejs" ,{listingShow});
 }));
 
@@ -67,6 +75,7 @@ router.put("/:id/" , validateListing, warpAsync(async (req,res) =>{
 
     let {id} = req.params;
     await Listing.findByIdAndUpdate(id, {...req.body.listing});
+    req.flash("success" , "Listing Updated!");
     res.redirect(`/listing/${id}`);
 }));
 
@@ -75,6 +84,7 @@ router.delete("/:id", warpAsync(async (req,res) =>{
     let {id} = req.params;
     await Listing.findByIdAndDelete(id);
     // console.log(deletelisting);
+    req.flash("success" , "Listing Deleted!");
     res.redirect("/listing");
 }));
 
