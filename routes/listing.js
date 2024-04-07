@@ -2,20 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Listing = require("../models/listing.js");
 const warpAsync = require("../utils/warpAsync.js");
-const ExpressError = require("../utils/ExpressError.js");
-const {listingSchema} = require("../schema.js");
-
-
-const validateListing = (req,res,next) => {
-    let {error} = listingSchema.validate(req.body);
-    console.log(error);
-    if(error){
-        let errMsg = error.details.map((el) => el.message).join(",");
-        throw new ExpressError(400, errMsg);
-    } else {
-        next();
-    }
-};
+const {isLoggedIn ,isOwner , validateListing} = require("../middleware.js");
 
 
 //Index Routes
@@ -26,31 +13,39 @@ router.get("/", warpAsync(async (req,res) =>{
 
 
 //New Listing
-router.get("/new" , (req,res) => {
+router.get("/new" , isLoggedIn, (req,res) => {
     res.render("listing/newListing.ejs");
 });
 
 //Show Routes
 router.get("/:id", warpAsync(async (req,res) =>{
     let {id} = req.params;
-    const listingShow = await Listing.findById(id).populate("reviews");
+    const listingShow = await Listing.findById(id)
+                        .populate( {
+                             path :"reviews", 
+                             populate:{
+                                path: "author"
+                            },
+                        })
+                        .populate("owner");
     if(!listingShow){
         req.flash("error" , "Listing you requested does not exit!");
         res.redirect("/listing");
     }
     res.render("listing/show.ejs",{listingShow});
-    // console.log(listingShow);
+    console.log(listingShow);
 }));
 
 
 
 // create Routes 
-router.post("/", validateListing, warpAsync(async (req,res,next) => {
+router.post("/", validateListing, isLoggedIn, warpAsync(async (req,res,next) => {
     // let {result} = listingSchema.validate(req.body);
     //     console.log(e);
         let ListingObj = req.body.listing;  // dricet pass object 
         const newListing = new Listing(ListingObj);
         // console.log(newListing);
+        newListing.owner = req.user._id;
         await newListing.save();
         req.flash("success" , "New Listing Created!");
         res.redirect("/listing");
@@ -59,7 +54,7 @@ router.post("/", validateListing, warpAsync(async (req,res,next) => {
 
 
 // Edit Routes
-router.get("/:id/edit", warpAsync(async (req,res) =>{
+router.get("/:id/edit",isLoggedIn, isOwner, warpAsync(async (req,res) =>{
     let {id} = req.params;
     const listingShow = await Listing.findById(id);
     if(!listingShow){
@@ -71,7 +66,7 @@ router.get("/:id/edit", warpAsync(async (req,res) =>{
 
 
 //Update Routes
-router.put("/:id/" , validateListing, warpAsync(async (req,res) =>{
+router.put("/:id/" ,isLoggedIn, isOwner, validateListing,  warpAsync(async (req,res) =>{
 
     let {id} = req.params;
     await Listing.findByIdAndUpdate(id, {...req.body.listing});
@@ -80,7 +75,7 @@ router.put("/:id/" , validateListing, warpAsync(async (req,res) =>{
 }));
 
 // DELETE Routrs
-router.delete("/:id", warpAsync(async (req,res) =>{
+router.delete("/:id", isLoggedIn, isOwner, warpAsync(async (req,res) =>{
     let {id} = req.params;
     await Listing.findByIdAndDelete(id);
     // console.log(deletelisting);
