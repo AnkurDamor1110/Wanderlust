@@ -3,86 +3,32 @@ const router = express.Router();
 const Listing = require("../models/listing.js");
 const warpAsync = require("../utils/warpAsync.js");
 const {isLoggedIn ,isOwner , validateListing} = require("../middleware.js");
+const listingController = require("../controller/listing.js");
+const multer = require("multer");
+const { storage } = require("../cloudConfig.js");
+const upload = multer({storage});
 
-
-//Index Routes
-router.get("/", warpAsync(async (req,res) =>{
-    const allListing = await Listing.find({});
-    res.render("listing/index.ejs", {allListing});
-}));
+//Index Routes  create Routes 
+router.route("/")
+        .get(warpAsync(listingController.index))
+        .post(
+            isLoggedIn,
+            upload.single("listing[image]"), 
+            validateListing, 
+            warpAsync(listingController.createListing) );
 
 
 //New Listing
-router.get("/new" , isLoggedIn, (req,res) => {
-    res.render("listing/newListing.ejs");
-});
+router.get("/new" , isLoggedIn, listingController.renderNewForm);
 
-//Show Routes
-router.get("/:id", warpAsync(async (req,res) =>{
-    let {id} = req.params;
-    const listingShow = await Listing.findById(id)
-                        .populate( {
-                             path :"reviews", 
-                             populate:{
-                                path: "author"
-                            },
-                        })
-                        .populate("owner");
-    if(!listingShow){
-        req.flash("error" , "Listing you requested does not exit!");
-        res.redirect("/listing");
-    }
-    res.render("listing/show.ejs",{listingShow});
-    console.log(listingShow);
-}));
-
-
-
-// create Routes 
-router.post("/", validateListing, isLoggedIn, warpAsync(async (req,res,next) => {
-    // let {result} = listingSchema.validate(req.body);
-    //     console.log(e);
-        let ListingObj = req.body.listing;  // dricet pass object 
-        const newListing = new Listing(ListingObj);
-        // console.log(newListing);
-        newListing.owner = req.user._id;
-        await newListing.save();
-        req.flash("success" , "New Listing Created!");
-        res.redirect("/listing");
-}));
-
-
+//Show Routes Update Routes DELETE Routrs
+router.route("/:id")
+        .get(warpAsync(listingController.showListing))
+        .put(isLoggedIn, isOwner, validateListing,  warpAsync(listingController.updateListing))
+        .delete(isLoggedIn, isOwner, warpAsync(listingController.destroyListing));
 
 // Edit Routes
-router.get("/:id/edit",isLoggedIn, isOwner, warpAsync(async (req,res) =>{
-    let {id} = req.params;
-    const listingShow = await Listing.findById(id);
-    if(!listingShow){
-        req.flash("error" , "Listing you requested does not exit!");
-        res.redirect("/listing");
-    }
-    res.render("listing/editListing.ejs" ,{listingShow});
-}));
-
-
-//Update Routes
-router.put("/:id/" ,isLoggedIn, isOwner, validateListing,  warpAsync(async (req,res) =>{
-
-    let {id} = req.params;
-    await Listing.findByIdAndUpdate(id, {...req.body.listing});
-    req.flash("success" , "Listing Updated!");
-    res.redirect(`/listing/${id}`);
-}));
-
-// DELETE Routrs
-router.delete("/:id", isLoggedIn, isOwner, warpAsync(async (req,res) =>{
-    let {id} = req.params;
-    await Listing.findByIdAndDelete(id);
-    // console.log(deletelisting);
-    req.flash("success" , "Listing Deleted!");
-    res.redirect("/listing");
-}));
-
+router.get("/:id/edit",isLoggedIn, isOwner, warpAsync(listingController.randerEditForm));
 
 
 module.exports = router;
