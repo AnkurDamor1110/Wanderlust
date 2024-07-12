@@ -53,14 +53,24 @@ module.exports.randerEditForm = async (req,res) =>{
         req.flash("error" , "Listing you requested does not exit!");
         res.redirect("/listing");
     }
-    res.render("listing/editListing.ejs" ,{listingShow});
+    let originalImageUrl = listingShow.image.url;
+    originalImageUrl.replace("/upload" , "/upload/h_300,w_250");
+    res.render("listing/editListing.ejs" ,{listingShow , originalImageUrl});
 };
 
 
 module.exports.updateListing = async (req,res) =>{
 
     let {id} = req.params;
-    await Listing.findByIdAndUpdate(id, {...req.body.listing});
+    
+    let newListing = await Listing.findByIdAndUpdate(id, {...req.body.listing});
+    
+    if ( typeof req.file !== "undefined") {
+    let url = req.file.path;
+    let filename = req.file.filename;
+    newListing.image = {url, filename};
+    await newListing.save();
+    }
     req.flash("success" , "Listing Updated!");
     res.redirect(`/listing/${id}`);
 };
